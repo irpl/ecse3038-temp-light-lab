@@ -306,10 +306,25 @@ function getLight() {
       "api-key": identifier,
     }
   })
-    .then((response) => response.json())
-    .then((data) => {
-      document.getElementById("light-switch").checked = data.light;
-    });
+  .then((response) => {
+    if (!response.ok) { // Check for non-200 status
+      if (response.status === 404) {
+        fetch("/api/light", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "api-key": identifier,
+          },
+          body: JSON.stringify({"light": false}),
+        })
+      } else {
+        throw new Error("Error fetching light status: " + response.status);
+      }
+    }
+    return response.json(); // Proceed only if the status is OK
+  })
+  .then((data) => document.getElementById("light-switch").checked = data.light)
+  .catch((error) => console.error("Error:", error));
 }
 
 setInterval(() => {
